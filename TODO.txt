@@ -1,0 +1,6 @@
+TODO
+    () implement database (flask on top of sqlite or Go + sqlite)
+        -> create an ingest process and background process to insert into database
+    () save message
+    () run word count (then move to sentiment analysis) on messages -> for determing who's on PIP
+    () 
