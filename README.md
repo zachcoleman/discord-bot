@@ -1,5 +1,18 @@
+## Discord Bot
 
-Run the bot with the command below:
+Setup a Docker volume:
+```shell
+docker volume create discord-bot-db
 ```
-python bot/bot.py
+
+Build the Docker image:
+```shell
+make docker-build
 ```
+
+Run the Docker image:
+```shell
+make docker-run
+```
+
+
