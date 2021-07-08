@@ -6,12 +6,13 @@ import asyncio
 import datetime
 import logging
 import sqlite3
+import random
 
 from dotenv import load_dotenv
 
 from utils import url_request
 from register import background_register, command_register
-from queries import CREATE_MESSAGES
+from queries import CREATE_MESSAGES, SAVE_MSG, PRUNE_DB, HIST, PIP_CALC
 
 # set up logging
 logger = logging.getLogger(__file__)
@@ -91,12 +92,6 @@ class GitBot(discord.Client):
 
 
     async def save_message(self, message):
-        insert_stmt = f"""
-        insert into messages 
-        (author, author_id, channel, channel_id, datetime, content)
-        values
-        (?, ?, ?, ?, ?, ?);
-        """
         params = [
             str(message.author.name),
             str(message.author.id),
@@ -105,7 +100,7 @@ class GitBot(discord.Client):
             str(datetime.datetime.now()),
             str(message.content),
         ]
-        _ = self.db.execute(insert_stmt, params)
+        _ = self.db.execute(SAVE_MSG, params)
         self.db.commit()
 
         logger.info(f"Saving message to db from {message.author.name}")
@@ -145,14 +140,8 @@ class GitBot(discord.Client):
             return
         
         user_name = msg.mentions[0].name
-        query = f"""
-        select content from messages
-        where author = ?
-        limit 10;
-        """
-        
         res = self.db.execute(
-            query, 
+            HIST, 
             [user_name]
         )
         hist_msgs = res.fetchall()
@@ -163,9 +152,49 @@ class GitBot(discord.Client):
             )
 
 
-    @background_register(_BACKGROUND_REGISTRY)
+    @background_register(_BACKGROUND_REGISTRY, sleep_time=172800)
     async def assign_pips(self):
-        pass
+
+        guild = self.get_guild(int(os.environ.get("GUILD_ID")))
+        members = await guild.fetch_members().flatten()
+        members = [m for m in members if m.name != "GitBot"]
+        members_dict = {m.name: m.id for m in members}
+
+        res = self.db.execute(
+            PIP_CALC, 
+            [str(datetime.datetime.now() - datetime.timedelta(days=2))]
+        )
+        recent_msgs = res.fetchall()
+
+        member_counts = {k: 0 for k in members_dict.keys()}
+        for username, msg in recent_msgs:
+            if username in member_counts:
+                member_counts[username] += len(msg.split(" "))
+
+        member_counts = sorted([(v, k) for k, v in member_counts.items()])
+        lowest_score = member_counts[0][0]
+        potential_pip = [m for m in member_counts if m[0] == lowest_score]
+
+        to_pip = [random.choice(potential_pip)]
+        to_good_employees = [m for m in member_counts if m[1] != to_pip[0][1]]
+
+        pip_role = guild.get_role(int(os.environ.get("BAD_ROLE")))
+        good_employees_role = guild.get_role(int(os.environ.get("GOOD_ROLE")))
+
+        msg = ""
+        for mem_score, mem_name in to_pip:
+            mem = await guild.fetch_member(members_dict[mem_name])
+            await mem.remove_roles(pip_role, good_employees_role)
+            await mem.add_roles(pip_role)
+            msg += f"<@!{members_dict[mem_name]}> scored {mem_score:,} pts and is on PIP. \n"
+        
+        for mem_score, mem_name in to_good_employees:
+            mem = await guild.fetch_member(members_dict[mem_name])
+            await mem.remove_roles(pip_role, good_employees_role)
+            await mem.add_roles(good_employees_role)
+            msg += f"<@!{members_dict[mem_name]}> scored {mem_score:,} pts and is a Good Employee. \n"
+            
+        await self.get_channel(int(os.environ.get("CHANNEL_GENERAL"))).send(msg)
 
 
     @background_register(_BACKGROUND_REGISTRY)
@@ -189,12 +218,8 @@ class GitBot(discord.Client):
     
     @background_register(_BACKGROUND_REGISTRY, sleep_time=86400)
     async def prune_database(self):
-        delete_query = f"""
-        delete from messages 
-        where datetime < ?
-        """
         self.db.execute(
-            delete_query, 
+            PRUNE_DB, 
             [str(datetime.datetime.now() - datetime.timedelta(days=90))]
         )
         self.db.commit()
