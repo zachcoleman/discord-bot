@@ -7,7 +7,6 @@ import datetime
 import logging
 import sqlite3
 
-from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
 from utils import url_request
@@ -114,9 +113,9 @@ class GitBot(discord.Client):
 
     async def backup_database(self):
         logger.info("Backing up database")
-        if os.path.exists("backup.db"):
-            os.remove("backup.db")
-        backup_conn = sqlite3.connect("backup.db")
+        if os.path.exists("./data/backup.db"):
+            os.remove("./data/backup.db")
+        backup_conn = sqlite3.connect("./data/backup.db")
         self.db.backup(backup_conn)
         logger.info("Database backed up")
 
@@ -207,7 +206,7 @@ if __name__ == "__main__":
     load_dotenv()
     logger.info("Starting application")
     intents = discord.Intents.all()
-    client = GitBot(db_file_pth="dev.db", intents=intents)
+    client = GitBot(db_file_pth="./data/dev.db", intents=intents)
     client.run(os.environ.get("TOKEN"))
 
 

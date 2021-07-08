@@ -1,7 +1,9 @@
 
+from typing import Dict, Callable
+
 _DEFAULT_BG_TIMER = 300
 
-def background_register(registry: dict, sleep_time:int=None):
+def background_register(registry: Dict[str, Callable], sleep_time:int=None):
     if sleep_time is None:
         sleep_time = _DEFAULT_BG_TIMER
     
@@ -14,7 +16,7 @@ def background_register(registry: dict, sleep_time:int=None):
     
     return inner_func
 
-def command_register(registry: dict, info=None):
+def command_register(registry: Dict[str, Callable], info:str=None):
     if info is None:
         info = "Bot command."    
     def inner_func(func):
