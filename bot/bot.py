@@ -177,7 +177,7 @@ class GitBot(discord.Client):
 
         res = self.db.execute(
             PIP_CALC, 
-            [str(datetime.datetime.now() - datetime.timedelta(days=2))]
+            [str(datetime.datetime.now() - datetime.timedelta(days=1))]
         )
         recent_msgs = res.fetchall()
 
