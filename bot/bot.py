@@ -163,11 +163,7 @@ class GitBot(discord.Client):
             )
 
 
-    @background_register(
-        _BACKGROUND_REGISTRY, 
-        daily_time=16, 
-        sleep_time=3600
-    )
+    @background_register(_BACKGROUND_REGISTRY, daily_time=16)
     async def assign_pips(self):
 
         guild = self.get_guild(int(os.environ.get("GUILD_ID")))
@@ -212,11 +208,7 @@ class GitBot(discord.Client):
         await self.get_channel(int(os.environ.get("CHANNEL_GENERAL"))).send(msg)
 
 
-    @background_register(
-        _BACKGROUND_REGISTRY, 
-        daily_time=16, 
-        sleep_time=3600
-    )
+    @background_register(_BACKGROUND_REGISTRY, daily_time=16)
     async def leetcode_potd(self):
         # get the lc channel
         channel = self.get_channel(int(os.environ.get("CHANNEL_LEETCODE")))
