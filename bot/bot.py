@@ -245,7 +245,6 @@ class GitBot(discord.Client):
         self.db.commit()
     
 
-
 if __name__ == "__main__":
     logger.info("Loading environment variables")
     load_dotenv()

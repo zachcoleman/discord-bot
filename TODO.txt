@@ -1,2 +1,2 @@
 TODO
-    () run word count on messages -> for determing who's on PIP
+    () implement organization by https://stackoverflow.com/questions/47561840/python-how-can-i-separate-functions-of-class-into-multiple-files
