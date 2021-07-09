@@ -54,11 +54,20 @@ class GitBot(discord.Client):
                 async def bg_coroutine():
                     await self.wait_until_ready()
                     while not self.is_closed():
-                        logger.info(f'Background task: {bg_task["method"].__name__} running')
-                        await bg_task["method"](self)
-                        logger.info(f'Background task: {bg_task["method"].__name__} done')
+                        if bg_task["daily_time"] is not None:
+                            if datetime.datetime.now().hour == bg_task["daily_time"]:
+                                logger.info(f'Background task: {bg_task["method"].__name__} running')
+                                await bg_task["method"](self)
+                                logger.info(f'Background task: {bg_task["method"].__name__} done')
+                        else:
+                            logger.info(f'Background task: {bg_task["method"].__name__} running')
+                            await bg_task["method"](self)
+                            logger.info(f'Background task: {bg_task["method"].__name__} done')
+                                                    
                         await asyncio.sleep(bg_task["sleep_time"])
+
                     bg_coroutine.__name__ = bg_name  
+
                 return bg_coroutine
 
             # generate coroutine and add to loop
@@ -71,6 +80,8 @@ class GitBot(discord.Client):
         # don't respond to self
         if message.author == self.user:
             await self.save_message(message)
+            return
+        if not message.content:
             return
         
         # handle helping
@@ -152,7 +163,11 @@ class GitBot(discord.Client):
             )
 
 
-    @background_register(_BACKGROUND_REGISTRY, sleep_time=172800)
+    @background_register(
+        _BACKGROUND_REGISTRY, 
+        daily_time=16, 
+        sleep_time=3600
+    )
     async def assign_pips(self):
 
         guild = self.get_guild(int(os.environ.get("GUILD_ID")))
@@ -197,7 +212,11 @@ class GitBot(discord.Client):
         await self.get_channel(int(os.environ.get("CHANNEL_GENERAL"))).send(msg)
 
 
-    @background_register(_BACKGROUND_REGISTRY)
+    @background_register(
+        _BACKGROUND_REGISTRY, 
+        daily_time=16, 
+        sleep_time=3600
+    )
     async def leetcode_potd(self):
         # get the lc channel
         channel = self.get_channel(int(os.environ.get("CHANNEL_LEETCODE")))
@@ -209,6 +228,7 @@ class GitBot(discord.Client):
 
         if datetime.datetime.now().hour == 10:
             await channel.send(msg)
+            asyncio.sleep(3600)
 
 
     @background_register(_BACKGROUND_REGISTRY, sleep_time=86400)

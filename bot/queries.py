@@ -27,6 +27,7 @@ where datetime < ?
 HIST = """
 select content from messages
 where author = ?
+order by datetime desc
 limit 10;
 """
 
