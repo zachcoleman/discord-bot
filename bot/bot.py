@@ -6,13 +6,10 @@ import asyncio
 import datetime
 import logging
 import sqlite3
-import random
 
 from dotenv import load_dotenv
 
-from utils import url_request
-from register import background_register, command_register
-from queries import CREATE_MESSAGES, SAVE_MSG, PRUNE_DB, HIST, PIP_CALC
+from queries import CREATE_MESSAGES, SAVE_MSG
 
 # set up logging
 logger = logging.getLogger(__file__)
@@ -23,10 +20,16 @@ logger.addHandler(stream_handler)
 logger.setLevel(logging.INFO)
 
 # registers
-_BACKGROUND_REGISTRY = {}
-_COMMAND_REGISTRY = {}
+from _commands import _COMMAND_REGISTRY
+from _background import _BACKGROUND_REGISTRY
 
 class GitBot(discord.Client):
+
+    # imported methods (not necessary cause in registers)
+    # from _commands import ping, pong, hist
+    # from _background import (
+    # assign_pips, leetcode_potd, background_backup_database, prune_database
+    # )
 
     def __init__(self, db_file_pth, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -39,7 +42,7 @@ class GitBot(discord.Client):
         for query in init_queries:
             _ = self.db.execute(query)
         self.db.commit()
-    
+
 
     async def on_ready(self):
         logger.info(f"Logged on as {self.user}")
@@ -59,6 +62,7 @@ class GitBot(discord.Client):
                                 logger.info(f'Background task: {bg_task["method"].__name__} running')
                                 await bg_task["method"](self)
                                 logger.info(f'Background task: {bg_task["method"].__name__} done')
+                                await asyncio.sleep(5400)
                         else:
                             logger.info(f'Background task: {bg_task["method"].__name__} running')
                             await bg_task["method"](self)
@@ -125,117 +129,6 @@ class GitBot(discord.Client):
         self.db.backup(backup_conn)
         logger.info("Database backed up")
 
-
-    @command_register(_COMMAND_REGISTRY, info="list all the commands")
-    async def commands(self, msg):
-        cmd_list = []
-        for name, command_dict in _COMMAND_REGISTRY.items():
-            cmd_list.append(f"{name}: \n\t{command_dict['info']}")
-        await msg.channel.send("\n".join(cmd_list))
-
-
-    @command_register(_COMMAND_REGISTRY, info="you ping, I pong")
-    async def ping(self, msg):
-        await msg.channel.send("pong")
-    
-
-    @command_register(_COMMAND_REGISTRY, info="you pong, I ping")
-    async def pong(self, msg):
-        await msg.channel.send("ping")
-
-
-    @command_register(_COMMAND_REGISTRY, info="see user history of msgs (limit 10)")
-    async def hist(self, msg):
-        
-        if len(msg.mentions) < 1:
-            return
-        
-        user_name = msg.mentions[0].name
-        res = self.db.execute(
-            HIST, 
-            [user_name]
-        )
-        hist_msgs = res.fetchall()
-
-        if hist_msgs:
-            await msg.channel.send(
-                "\n".join([f"{i+1}) " + m[0] for i, m in enumerate(hist_msgs)])
-            )
-
-
-    @background_register(_BACKGROUND_REGISTRY, daily_time=16)
-    async def assign_pips(self):
-
-        guild = self.get_guild(int(os.environ.get("GUILD_ID")))
-        members = await guild.fetch_members().flatten()
-        members = [m for m in members if m.name != "GitBot"]
-        members_dict = {m.name: m.id for m in members}
-
-        res = self.db.execute(
-            PIP_CALC, 
-            [str(datetime.datetime.now() - datetime.timedelta(days=1))]
-        )
-        recent_msgs = res.fetchall()
-
-        member_counts = {k: 0 for k in members_dict.keys()}
-        for username, msg in recent_msgs:
-            if username in member_counts:
-                member_counts[username] += len(msg.split(" "))
-
-        member_counts = sorted([(v, k) for k, v in member_counts.items()])
-        lowest_score = member_counts[0][0]
-        potential_pip = [m for m in member_counts if m[0] == lowest_score]
-
-        to_pip = [random.choice(potential_pip)]
-        to_good_employees = [m for m in member_counts if m[1] != to_pip[0][1]]
-
-        pip_role = guild.get_role(int(os.environ.get("BAD_ROLE")))
-        good_employees_role = guild.get_role(int(os.environ.get("GOOD_ROLE")))
-
-        msg = ""
-        for mem_score, mem_name in to_pip:
-            mem = await guild.fetch_member(members_dict[mem_name])
-            await mem.remove_roles(pip_role, good_employees_role)
-            await mem.add_roles(pip_role)
-            msg += f"<@!{members_dict[mem_name]}> scored {mem_score:,} pts and is on PIP. \n"
-        
-        for mem_score, mem_name in to_good_employees:
-            mem = await guild.fetch_member(members_dict[mem_name])
-            await mem.remove_roles(pip_role, good_employees_role)
-            await mem.add_roles(good_employees_role)
-            msg += f"<@!{members_dict[mem_name]}> scored {mem_score:,} pts and is a Good Employee. \n"
-            
-        await self.get_channel(int(os.environ.get("CHANNEL_GENERAL"))).send(msg)
-
-
-    @background_register(_BACKGROUND_REGISTRY, daily_time=16)
-    async def leetcode_potd(self):
-        # get the lc channel
-        channel = self.get_channel(int(os.environ.get("CHANNEL_LEETCODE")))
-
-        # ger random prob
-        resp = await url_request("https://leetcode.com/problems/random-one-question/all")
-        potd_url = resp.url
-        msg = f"Problem of the Day: \n" + str(potd_url)
-
-        if datetime.datetime.now().hour == 10:
-            await channel.send(msg)
-            asyncio.sleep(3600)
-
-
-    @background_register(_BACKGROUND_REGISTRY, sleep_time=86400)
-    async def background_backup_database(self):
-        await self.backup_database()
-    
-    
-    @background_register(_BACKGROUND_REGISTRY, sleep_time=86400)
-    async def prune_database(self):
-        self.db.execute(
-            PRUNE_DB, 
-            [str(datetime.datetime.now() - datetime.timedelta(days=90))]
-        )
-        self.db.commit()
-    
 
 if __name__ == "__main__":
     logger.info("Loading environment variables")
