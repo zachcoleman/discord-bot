@@ -23,7 +23,7 @@ logger.setLevel(logging.INFO)
 # registers
 from _commands import _COMMAND_REGISTRY
 from _background import _BACKGROUND_REGISTRY
-from _random_processes import _RANDOM_REGISTRY
+from _random_msg import _RANDOM_REGISTRY
 
 class GitBot(discord.Client):
 
