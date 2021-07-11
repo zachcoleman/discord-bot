@@ -36,5 +36,11 @@ select author, content from messages
 where datetime >= ?
 """
 
+PTS_CALC = """
+select content from messages
+where datetime >= ?
+and author == ?
+"""
+
 
 

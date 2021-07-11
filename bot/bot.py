@@ -6,6 +6,7 @@ import asyncio
 import datetime
 import logging
 import sqlite3
+import random
 
 from dotenv import load_dotenv
 
@@ -22,6 +23,7 @@ logger.setLevel(logging.INFO)
 # registers
 from _commands import _COMMAND_REGISTRY
 from _background import _BACKGROUND_REGISTRY
+from _random_processes import _RANDOM_REGISTRY
 
 class GitBot(discord.Client):
 
@@ -96,11 +98,21 @@ class GitBot(discord.Client):
                     await message.channel.send(f"{name}: \n\t{command_dict['info']}")
         
         # dispatch command to respective method
-        if message.content[0] == "!":
+        elif message.content[0] == "!":
             for name, command_dict in _COMMAND_REGISTRY.items():
                 if message.content.split(" ")[0][1:].lower() == name:
                     logger.info(f"Command: {name}")
                     await command_dict["method"](self, message)
+        
+        # apply random commands
+        else:
+            p = random.random()
+            for name, random_dict in _RANDOM_REGISTRY.items():
+                if p < random_dict["prob"]:
+                    logger.info(f"Random: {name}")
+                    await random_dict["method"](self, message)
+
+
 
         # save msg to database
         await self.save_message(message)

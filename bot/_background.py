@@ -5,6 +5,7 @@ import datetime
 from registers import background_register
 from utils import url_request
 from queries import PIP_CALC, PRUNE_DB
+from config import PIP_TIMEFRAME, PTS_MAX_LEN
 
 _BACKGROUND_REGISTRY = {}
 
@@ -18,14 +19,14 @@ async def assign_pips(self):
 
     res = self.db.execute(
         PIP_CALC, 
-        [str(datetime.datetime.now() - datetime.timedelta(days=1))]
+        [str(datetime.datetime.now() - datetime.timedelta(days=PIP_TIMEFRAME))]
     )
     recent_msgs = res.fetchall()
 
     member_counts = {k: 0 for k in members_dict.keys()}
     for username, msg in recent_msgs:
         if username in member_counts:
-            member_counts[username] += len(msg.split(" "))
+            member_counts[username] += min(len(msg.split(" ")), PTS_MAX_LEN)
 
     member_counts = sorted([(v, k) for k, v in member_counts.items()])
     lowest_score = member_counts[0][0]

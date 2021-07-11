@@ -1,7 +1,8 @@
 
 
 from registers import command_register
-from queries import HIST
+from queries import HIST, PTS_CALC
+from config import PIP_TIMEFRAME, PTS_MAX_LEN
 
 _COMMAND_REGISTRY = {}
 
@@ -25,7 +26,6 @@ async def pong(self, msg):
 
 @command_register(_COMMAND_REGISTRY, info="see user history of msgs (limit 10)")
 async def hist(self, msg):
-    
     if len(msg.mentions) < 1:
         return
     
@@ -40,3 +40,24 @@ async def hist(self, msg):
         await msg.channel.send(
             "\n".join([f"{i+1}) " + m[0] for i, m in enumerate(hist_msgs)])
         )
+
+
+@command_register(_COMMAND_REGISTRY, info="see current user pts")
+async def pts(self, msg):
+    if len(msg.mentions) < 1:
+        return
+    
+    user_name = msg.mentions[0].name
+    res = self.db.execute(
+        PTS_CALC, 
+        [PIP_TIMEFRAME, user_name]
+    )
+    hist_msgs = res.fetchall()
+
+    pts = 0
+    for m in hist_msgs:
+        pts += min(len(m[0].split(" ")), PTS_MAX_LEN)
+
+    await msg.channel.send(f"<@!{msg.mentions[0].id}> has {pts:,} pts.")
+
+
