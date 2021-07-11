@@ -1,4 +1,5 @@
 
+import datetime
 
 from registers import command_register
 from queries import HIST, PTS_CALC
@@ -50,7 +51,10 @@ async def pts(self, msg):
     user_name = msg.mentions[0].name
     res = self.db.execute(
         PTS_CALC, 
-        [PIP_TIMEFRAME, user_name]
+        [
+            str(datetime.datetime.now() - datetime.timedelta(days=PIP_TIMEFRAME)), 
+            user_name
+        ]
     )
     hist_msgs = res.fetchall()
 
