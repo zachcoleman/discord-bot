@@ -4,7 +4,7 @@ from registers import random_register
 
 _RANDOM_REGISTRY = {}
 
-@random_register(_RANDOM_REGISTRY, prob=0.05)
+@random_register(_RANDOM_REGISTRY, prob=0.02)
 async def mock(self, msg):
     msg_str = msg.content.lower()
     if len(msg_str) > 10:  # only mock longer messages

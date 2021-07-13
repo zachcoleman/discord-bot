@@ -1,2 +1,8 @@
 TODO
-    () implement organization by https://stackoverflow.com/questions/47561840/python-how-can-i-separate-functions-of-class-into-multiple-files
+    () implement a more configurable background task to support frequency and time of day better
+        () check condition interval sleep time
+        () inter-interval sleep time
+        () post-sucess sleep time
+
+    () implement a stateful configuration (like "poll" command)
+    () 

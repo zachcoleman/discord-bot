@@ -64,7 +64,7 @@ class GitBot(discord.Client):
                                 logger.info(f'Background task: {bg_task["method"].__name__} running')
                                 await bg_task["method"](self)
                                 logger.info(f'Background task: {bg_task["method"].__name__} done')
-                                await asyncio.sleep(5400)
+                                await asyncio.sleep(3600)
                         else:
                             logger.info(f'Background task: {bg_task["method"].__name__} running')
                             await bg_task["method"](self)
