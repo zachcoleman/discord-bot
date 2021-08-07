@@ -58,7 +58,7 @@ class GitBot(discord.Client):
             def generate_bg_rountine(bg_name, bg_task):
                 async def bg_coroutine():
 
-                    def run():
+                    async def run():
                         logger.info(f'Background task: {bg_task["method"].__name__} running')
                         await bg_task["method"](self)
                         logger.info(f'Background task: {bg_task["method"].__name__} done')
@@ -69,14 +69,14 @@ class GitBot(discord.Client):
                         if bg_task["daily_time"] is not None and bg_task["days"] is not None:
                             if datetime.datetime.now().weekday() in bg_task["days"]:
                                 if datetime.datetime.now().hour == bg_task["daily_time"]:
-                                    run()    
+                                    await run()    
                                     await asyncio.sleep(3600)
                         elif bg_task["daily_time"] is not None:
                             if datetime.datetime.now().hour == bg_task["daily_time"]:
-                                run()    
+                                await run()    
                                 await asyncio.sleep(3600)
                         else:
-                            run()
+                            await run()
                    
                         await asyncio.sleep(bg_task["sleep_time"])
 

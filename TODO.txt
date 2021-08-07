@@ -5,4 +5,5 @@ TODO
         () post-sucess sleep time
 
     () implement a stateful configuration (like "poll" command)
-    () 
+    () make docker-enter
+    () Dockerfile needs to update pip and some other stuff
