@@ -9,8 +9,10 @@ from utils import url_request
 
 _BACKGROUND_REGISTRY = {}
 
+# 0 - Monday, 1 - Tuesday, 2 - Wednesday, 3 - Thursday, 4 - Friday
+# 5 - Saturday, 6 - Sunday
 
-@background_register(_BACKGROUND_REGISTRY, daily_time=16)
+@background_register(_BACKGROUND_REGISTRY, daily_time=16, days=[1, 4])
 async def assign_pips(self):
 
     guild = self.get_guild(int(os.environ.get("GUILD_ID")))
