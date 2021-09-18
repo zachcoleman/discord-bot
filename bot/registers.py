@@ -1,22 +1,21 @@
-
 from typing import Callable, Dict, List
 
 _DEFAULT_BG_TIMER = 300
 
 
 def background_register(
-    registry: Dict[str, Callable], 
-    daily_time:int = None, 
-    sleep_time:int = None,
-    days: List[int] = None
+    registry: Dict[str, Callable],
+    daily_time: int = None,
+    sleep_time: int = None,
+    days: List[int] = None,
 ):
     if sleep_time is None:
         sleep_time = _DEFAULT_BG_TIMER
 
     def inner_func(func):
         registry[func.__name__] = {
-            "method": func, 
-            "sleep_time": sleep_time, 
+            "method": func,
+            "sleep_time": sleep_time,
             "daily_time": daily_time,
             "days": days,
         }
