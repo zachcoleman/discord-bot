@@ -1,13 +1,14 @@
-
+import datetime
 import os
 import random
-import datetime
+
+from config import PIP_TIMEFRAME, PTS_MAX_LEN
+from queries import PIP_CALC, PRUNE_DB
 from registers import background_register
 from utils import url_request
-from queries import PIP_CALC, PRUNE_DB
-from config import PIP_TIMEFRAME, PTS_MAX_LEN
 
 _BACKGROUND_REGISTRY = {}
+
 
 @background_register(_BACKGROUND_REGISTRY, daily_time=16)
 async def assign_pips(self):
@@ -18,8 +19,8 @@ async def assign_pips(self):
     members_dict = {m.name: m.id for m in members}
 
     res = self.db.execute(
-        PIP_CALC, 
-        [str(datetime.datetime.now() - datetime.timedelta(days=PIP_TIMEFRAME))]
+        PIP_CALC,
+        [str(datetime.datetime.now() - datetime.timedelta(days=PIP_TIMEFRAME))],
     )
     recent_msgs = res.fetchall()
 
@@ -43,14 +44,16 @@ async def assign_pips(self):
         mem = await guild.fetch_member(members_dict[mem_name])
         await mem.remove_roles(pip_role, good_employees_role)
         await mem.add_roles(pip_role)
-        msg += f"<@!{members_dict[mem_name]}> scored {mem_score:,} pts and is on PIP. \n"
-    
+        msg += (
+            f"<@!{members_dict[mem_name]}> scored {mem_score:,} pts and is on PIP. \n"
+        )
+
     for mem_score, mem_name in to_good_employees:
         mem = await guild.fetch_member(members_dict[mem_name])
         await mem.remove_roles(pip_role, good_employees_role)
         await mem.add_roles(good_employees_role)
         msg += f"<@!{members_dict[mem_name]}> scored {mem_score:,} pts and is a Good Employee. \n"
-        
+
     await self.get_channel(int(os.environ.get("CHANNEL_GENERAL"))).send(msg)
 
 
@@ -62,7 +65,7 @@ async def leetcode_potd(self):
     # ger random prob
     resp = await url_request("https://leetcode.com/problems/random-one-question/all")
     potd_url = resp.url
-    msg = f"Problem of the Day: \n" + str(potd_url)
+    msg = "Problem of the Day: \n" + str(potd_url)
 
     await channel.send(msg)
 
@@ -75,7 +78,6 @@ async def background_backup_database(self):
 @background_register(_BACKGROUND_REGISTRY, sleep_time=86400)
 async def prune_database(self):
     self.db.execute(
-        PRUNE_DB, 
-        [str(datetime.datetime.now() - datetime.timedelta(days=90))]
+        PRUNE_DB, [str(datetime.datetime.now() - datetime.timedelta(days=90))]
     )
     self.db.commit()

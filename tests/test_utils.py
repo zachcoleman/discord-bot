@@ -1,10 +1,12 @@
-
 import asyncio
+
 from bot.utils import url_request
+
 
 def test_request():
     resp = asyncio.run(url_request("http://www.google.com"))
     assert resp.status_code == 200
+
 
 def test_leetcode():
     resp = asyncio.run(

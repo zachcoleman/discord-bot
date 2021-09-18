@@ -1,11 +1,11 @@
-
 import datetime
 
-from registers import command_register
-from queries import HIST, PTS_CALC
 from config import PIP_TIMEFRAME, PTS_MAX_LEN
+from queries import HIST, PTS_CALC
+from registers import command_register
 
 _COMMAND_REGISTRY = {}
+
 
 @command_register(_COMMAND_REGISTRY, info="list all the commands")
 async def commands(self, msg):
@@ -29,12 +29,9 @@ async def pong(self, msg):
 async def hist(self, msg):
     if len(msg.mentions) < 1:
         return
-    
+
     user_name = msg.mentions[0].name
-    res = self.db.execute(
-        HIST, 
-        [user_name]
-    )
+    res = self.db.execute(HIST, [user_name])
     hist_msgs = res.fetchall()
 
     if hist_msgs:
@@ -47,14 +44,14 @@ async def hist(self, msg):
 async def pts(self, msg):
     if len(msg.mentions) < 1:
         return
-    
+
     user_name = msg.mentions[0].name
     res = self.db.execute(
-        PTS_CALC, 
+        PTS_CALC,
         [
-            str(datetime.datetime.now() - datetime.timedelta(days=PIP_TIMEFRAME)), 
-            user_name
-        ]
+            str(datetime.datetime.now() - datetime.timedelta(days=PIP_TIMEFRAME)),
+            user_name,
+        ],
     )
     hist_msgs = res.fetchall()
 
@@ -63,5 +60,3 @@ async def pts(self, msg):
         pts += min(len(m[0].split(" ")), PTS_MAX_LEN)
 
     await msg.channel.send(f"<@!{msg.mentions[0].id}> has {pts:,} pts.")
-
-

@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "discord-bot"
+version = "0.1.0"
+description = "GitBot - a Discord bot that'll PIP you"
+authors = ["Zachary Coleman <zacharywcoleman@gmail.com>"]
+packages = [
+    { include = "bot" },
+]
+homepage = "https://github.com/zachcoleman/discord-bot"
+
+
+[tool.poetry.dependencies]
+python = "^3.9"
+python-dotenv = "^0.19.0"
+"discord.py" = "^1.7.3"
+requests = "^2.26.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+pytest-cov = "^2.12.1"
+pre-commit = "^2.15.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

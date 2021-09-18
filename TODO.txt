@@ -1,8 +1,0 @@
-TODO
-    () implement a more configurable background task to support frequency and time of day better
-        () check condition interval sleep time
-        () inter-interval sleep time
-        () post-sucess sleep time
-
-    () implement a stateful configuration (like "poll" command)
-    () 

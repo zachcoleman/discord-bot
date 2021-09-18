@@ -1,29 +1,28 @@
-
-###### db mgmt queries ######
+# db mgmt queries
 CREATE_MESSAGES = """
 CREATE TABLE IF NOT EXISTS messages (
-	author TEXT,
+    author TEXT,
     author_id TEXT,
     channel TEXT,
     channel_id TEXT,
     datetime TEXT,
-    content TEXT 
+    content TEXT
 );
 """
 
 SAVE_MSG = """
-insert into messages 
+insert into messages
 (author, author_id, channel, channel_id, datetime, content)
 values
 (?, ?, ?, ?, ?, ?);
 """
 
 PRUNE_DB = """
-delete from messages 
+delete from messages
 where datetime < ?
 """
 
-###### command queries ######
+# command queries
 HIST = """
 select content from messages
 where author = ?
@@ -41,6 +40,3 @@ select content from messages
 where datetime >= ?
 and author == ?
 """
-
-
-

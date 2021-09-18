@@ -1,15 +1,13 @@
-
-import discord
-import os
-import sys
 import asyncio
 import datetime
 import logging
-import sqlite3
+import os
 import random
+import sqlite3
+import sys
 
+import discord
 from dotenv import load_dotenv
-
 from queries import CREATE_MESSAGES, SAVE_MSG
 
 # set up logging
@@ -20,10 +18,10 @@ stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
 logger.setLevel(logging.INFO)
 
-# registers
-from _commands import _COMMAND_REGISTRY
-from _background import _BACKGROUND_REGISTRY
-from _random_msg import _RANDOM_REGISTRY
+from _background import _BACKGROUND_REGISTRY  # noqa
+from _commands import _COMMAND_REGISTRY  # noqa
+from _random_msg import _RANDOM_REGISTRY  # noqa
+
 
 class GitBot(discord.Client):
 
@@ -45,12 +43,10 @@ class GitBot(discord.Client):
             _ = self.db.execute(query)
         self.db.commit()
 
-
     async def on_ready(self):
         logger.info(f"Logged on as {self.user}")
         # after ready, launch background tasks
         await self.launch_background(_BACKGROUND_REGISTRY)
-
 
     async def launch_background(self, registry: dict):
         for bg_name, bg_task in _BACKGROUND_REGISTRY.items():
@@ -61,18 +57,26 @@ class GitBot(discord.Client):
                     while not self.is_closed():
                         if bg_task["daily_time"] is not None:
                             if datetime.datetime.now().hour == bg_task["daily_time"]:
-                                logger.info(f'Background task: {bg_task["method"].__name__} running')
+                                logger.info(
+                                    f'Background task: {bg_task["method"].__name__} running'
+                                )
                                 await bg_task["method"](self)
-                                logger.info(f'Background task: {bg_task["method"].__name__} done')
+                                logger.info(
+                                    f'Background task: {bg_task["method"].__name__} done'
+                                )
                                 await asyncio.sleep(3600)
                         else:
-                            logger.info(f'Background task: {bg_task["method"].__name__} running')
+                            logger.info(
+                                f'Background task: {bg_task["method"].__name__} running'
+                            )
                             await bg_task["method"](self)
-                            logger.info(f'Background task: {bg_task["method"].__name__} done')
-                                                    
+                            logger.info(
+                                f'Background task: {bg_task["method"].__name__} done'
+                            )
+
                         await asyncio.sleep(bg_task["sleep_time"])
 
-                    bg_coroutine.__name__ = bg_name  
+                    bg_coroutine.__name__ = bg_name
 
                 return bg_coroutine
 
@@ -80,7 +84,6 @@ class GitBot(discord.Client):
             tmp = generate_bg_rountine(bg_name, bg_task)
             self.loop.create_task(tmp())
             logger.info(f'Background task: {bg_task["method"].__name__} launched')
-    
 
     async def on_message(self, message):
         # don't respond to self
@@ -89,21 +92,21 @@ class GitBot(discord.Client):
             return
         if not message.content:
             return
-        
+
         # handle helping
         if message.content[0] == "?":
             for name, command_dict in _COMMAND_REGISTRY.items():
                 if name == message.content[1:].lower():
                     logger.info(f"Info requested for: {name}")
                     await message.channel.send(f"{name}: \n\t{command_dict['info']}")
-        
+
         # dispatch command to respective method
         elif message.content[0] == "!":
             for name, command_dict in _COMMAND_REGISTRY.items():
                 if message.content.split(" ")[0][1:].lower() == name:
                     logger.info(f"Command: {name}")
                     await command_dict["method"](self, message)
-        
+
         # apply random commands
         else:
             p = random.random()
@@ -112,11 +115,8 @@ class GitBot(discord.Client):
                     logger.info(f"Random: {name}")
                     await random_dict["method"](self, message)
 
-
-
         # save msg to database
         await self.save_message(message)
-
 
     async def save_message(self, message):
         params = [
@@ -131,7 +131,6 @@ class GitBot(discord.Client):
         self.db.commit()
 
         logger.info(f"Saving message to db from {message.author.name}")
-
 
     async def backup_database(self):
         logger.info("Backing up database")
@@ -149,5 +148,3 @@ if __name__ == "__main__":
     intents = discord.Intents.all()
     client = GitBot(db_file_pth="./data/dev.db", intents=intents)
     client.run(os.environ.get("TOKEN"))
-
-
