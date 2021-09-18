@@ -6,7 +6,7 @@ RUN apt-get update
 WORKDIR /app
 
 COPY bot/ /app/bot
-COPY requirements.txt /app/requirements.txt
+COPY pyproject.toml /app/pyproject.toml
 COPY setup.py /app/setup.py
 COPY .env /app/.env
 
