@@ -1,5 +1,5 @@
 
-FROM python:3.9.5-slim
+FROM python:3.9.12-slim
 
 RUN apt-get update
 
